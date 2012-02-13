@@ -51,16 +51,13 @@ DDS myDDS(1500);
 //some vars for dominoEX
 int stringpos=0; //position along the char array.
 int vericode_pos=0;
-unsigned long tonestart=0; //time since the tonestarted.
-int couldsendNibble; // this ==1 when ie a symble with a length of 1 nibble has been sent and we are trying to send the 2nd nibble
-
 
 int ledPin = 13;                 // LED pin 7
 int testPin = 7;
 int t2Pin = 6;
 byte bb;
 
-boolean chartrans; //indicates to the main loop that a character has been transmitted
+boolean stringTxfinished; //indicates to the main loop that a character has been transmitted
 
 void setup()
 {
@@ -71,96 +68,18 @@ void setup()
   pinMode(6, OUTPUT);      // sets the digital pin as output
   pinMode(7, OUTPUT);      // sets the digital pin as output
   pinMode(11, OUTPUT);     // pin11= PWM  output / frequency output
-
-  
-
 }
 void loop()
 {
-
-  chartrans=sendNibble(myD16,"test! yes this is a test! ",&stringpos,&vericode_pos);
-//    char buff[100];
-//    sprintf(buff,"d8: %i", myD8.changeme);
-//    Serial.println(buff);
-  if (chartrans==1){                //if this is a tone transition
-      //cbi (TIMSK2,TOIE2);              // disble Timer2 Interrupt
-      //Serial.println(c8us/1000-tonestart);
-      //dfreq=myD16.f; //get the frequncy from the DominoEX object
-      //tword_m=pow(2,32)*dfreq/refclk;  // calulate DDS new tuning word
-      //Serial.print(dfreq);
-      //Serial.print("  ");
-      //Serial.println(tword_m);
-      
-      //sbi (TIMSK2,TOIE2);              // enable Timer2 Interrupt 
+  //Send Nibble needs to be called a fair bit faster than the tone transition time
+  //for the dominoEX object.  However, dominoEX tone transitions are slow
+  //in microprocessor land so feel free to do stuff in between callling sendNibble
+  //as long as sendNibble is still called fast enough.
+  stringTxfinished=myD16.sendNibble(myDDS,"test! yes this is a test! ",&stringpos,&vericode_pos);
+  if (stringTxfinished==1){                
+		//could do some stuff
     }
-   
-   //sbi(PORTD,6); // Test / set PORTD,7 high to observe timing with a scope
-   //cbi(PORTD,6); // Test /reset PORTD,7 high to observe timing with a scope
+  //could also do some stuff 
  }
 //******************************************************************
 
-/*
-    Function to send a nibble of a character from a string
-    
-    Returns true if a string has been completely sent, otherwise returns false
-    Must be run untill returns true.
-    Also increments output string array position (arraypos) and vericode nibbble position if successfull
-*/
-
-boolean sendNibble(dominoex& inobj, char *pmessageString,int *arraypos, int *vericode_pos_l) //this should later be moved into the main DominoEX Class
-{
-  boolean string_transmitted=0;
-  //check if end of message has been meet.  Basically are we in a position to run the comms again.
-
-    if (pmessageString[*arraypos]=='\0') // start again if at the end of the string
-    {
-        //Serial.println("end of String!");
-        string_transmitted = 1;
-        *arraypos=0;
-    }
-    
-      
-    if(myDDS.c4ms-tonestart >= inobj.tone_ms) // if tone_ms (tone length in ms) has passed since tone start
-    {
-      //Serial.print(c4ms-tonestart);
-      tonestart=myDDS.c4ms; // mark the time that a new tone started
-       
-      
-        //Serial.print(*arraypos);
-        //Serial.println(pmessageString[*arraypos]);
-       couldsendNibble=inobj.tx_process(pmessageString[*arraypos],*vericode_pos_l);
-        //Serial.print(' ');     
-  
-       //now set the frequencies for the dds algoritm
-       
-       //Serial.println(inobj.f,DEC);
-       myDDS.SetFreq(inobj.f); //get the frequncy from the DominoEX object
-    
-       *vericode_pos_l += 1;
-//            char buff[100];
-//            sprintf(buff,"vericode_pos_l: %i", *vericode_pos_l);
-//            Serial.println(buff);
-       
-
-
-       
-       if (couldsendNibble==0){
-         //reset counters and increment outputstring array position
-         *vericode_pos_l = 0;
-         *arraypos += 1;
-         //We don't want to wait this time as we couldn't send this nibble as it doesn't exist
-         //so force a chnage to the "end" of a tone.  This is untidy and should be fixed at somepoint.
-         tonestart=myDDS.c4ms+inobj.tone_ms;
-         
-         
-       }
-       else if (*vericode_pos_l >= VERICODE_MAX_CHAR_LENGTH )// || couldsendNibble==0     
-       {
-         *vericode_pos_l = 0;
-         *arraypos += 1;
-       }
-     }
-
-    
-  return string_transmitted;
-}
