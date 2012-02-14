@@ -51,8 +51,8 @@
 class dominoex
 {
   public:
-    dominoex(int trx_mode, int mode, double txfreq_woffset);
-    void init_radio_params(int trx_mode, int mode, double txfreq_woffset);
+    dominoex(int mode, double txfreq_woffset);
+    void init_radio_params(int mode, double txfreq_woffset);
     void sendtone(int tone, int duration);
     void sendsymbol(int sym);
     int sendchar(unsigned char c, int secondary);
@@ -60,7 +60,7 @@ class dominoex
     //void sendsecondary();
     void flushtx();
     int tx_process(int char_to_send, int vericode_tuple_pos);
-    bool sendNibble(DDS& inDDS, char *pmessageString,int *arraypos, int *vericode_pos_l); //send a nibble, must be run until it returns true
+    bool sendNibble(DDS& inDDS, char *pmessageString); //send a nibble, must be run until it returns true
     int txstate;
     double f;  //the current output frequency
     bool stopflag;

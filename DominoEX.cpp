@@ -39,6 +39,10 @@
 unsigned long tonestart=0; //time since the tonestarted.
 int couldsendNibble; // this ==1 when ie a symble with a length of 1 nibble has been sent and we are trying to send the 2nd nibble
 
+//These used to be passed externally (early in repo), tidier to do here
+int arraypos=0;  //how far though the input string we are
+int vericode_pos_l=0; //Which of the 3 values making up the character are we at
+
 //Define the primary alphabet only.
 static unsigned char varicode[][3] = {
 	/* Primary alphabet */
@@ -88,7 +92,7 @@ unsigned char *dominoex_varienc(unsigned char c)
 	return bob;
 }
 
-void dominoex::init_radio_params(int trx_mode,int mode, double txfreq_woffsetin)
+void dominoex::init_radio_params(int mode, double txfreq_woffsetin)
 {
 	txfreq_woffset=txfreq_woffsetin;
 
@@ -154,9 +158,9 @@ void dominoex::init_radio_params(int trx_mode,int mode, double txfreq_woffsetin)
 	
 }
 
-dominoex::dominoex(int trx_mode,int mode, double txfreq_woffsetin)
+dominoex::dominoex(int mode, double txfreq_woffsetin)
 {
-	init_radio_params(trx_mode, mode, txfreq_woffsetin); //moved from main initialisation function to allow reseting of radio paramaters
+	init_radio_params(mode, txfreq_woffsetin); //moved from main initialisation function to allow reseting of radio paramaters
 	
 }
 void dominoex::sendtone(int tone, int duration)
@@ -328,28 +332,29 @@ int dominoex::tx_process(int char_to_send, int vericode_tuple_pos)
 
 
 
-bool dominoex::sendNibble(DDS& inDDS, char *pmessageString,int *arraypos, int *vericode_pos_l) //this should later be moved into the main DominoEX Class
+bool dominoex::sendNibble(DDS& inDDS, char *pmessageString) //this should later be moved into the main DominoEX Class
 {
   boolean string_transmitted=0;
   //check if end of message has been meet.  Basically are we in a position to run the comms again.
 
-    if (pmessageString[*arraypos]=='\0') // start again if at the end of the string
+    if (pmessageString[arraypos]=='\0') // start again if at the end of the string
     {
         //Serial.println("end of String!");
         string_transmitted = 1;
-        *arraypos=0;
+        arraypos=0;
     }
     
-      
+    Serial.print("inDDS.c4ms-tonestart");
+    Serial.println(inDDS.c4ms-tonestart,DEC);  
     if(inDDS.c4ms-tonestart >= tone_ms) // if tone_ms (tone length in ms) has passed since tone start
     {
-      //Serial.print(c4ms-tonestart);
+      //Serial.print(inDDS.c4ms-tonestart);
       tonestart=inDDS.c4ms; // mark the time that a new tone started
        
       
-        //Serial.print(*arraypos);
-        //Serial.println(pmessageString[*arraypos]);
-       couldsendNibble=tx_process(pmessageString[*arraypos],*vericode_pos_l);
+       // Serial.print(arraypos);
+       // Serial.println(pmessageString[arraypos]);
+       couldsendNibble=tx_process(pmessageString[arraypos],vericode_pos_l);
         //Serial.print(' ');     
   
        //now set the frequencies for the dds algoritm
@@ -357,7 +362,7 @@ bool dominoex::sendNibble(DDS& inDDS, char *pmessageString,int *arraypos, int *v
        //Serial.println(inobj.f,DEC);
        inDDS.SetFreq(f); //get the frequncy from the DominoEX object
     
-       *vericode_pos_l += 1;
+       vericode_pos_l += 1;
 //            char buff[100];
 //            sprintf(buff,"vericode_pos_l: %i", *vericode_pos_l);
 //            Serial.println(buff);
@@ -367,18 +372,18 @@ bool dominoex::sendNibble(DDS& inDDS, char *pmessageString,int *arraypos, int *v
        
        if (couldsendNibble==0){
          //reset counters and increment outputstring array position
-         *vericode_pos_l = 0;
-         *arraypos += 1;
+         vericode_pos_l = 0;
+         arraypos += 1;
          //We don't want to wait this time as we couldn't send this nibble as it doesn't exist
          //so force a chnage to the "end" of a tone.  This is untidy and should be fixed at somepoint.
          tonestart=inDDS.c4ms+tone_ms;
          
          
        }
-       else if (*vericode_pos_l >= VERICODE_MAX_CHAR_LENGTH )// || couldsendNibble==0     
+       else if (vericode_pos_l >= VERICODE_MAX_CHAR_LENGTH )// || couldsendNibble==0     
        {
-         *vericode_pos_l = 0;
-         *arraypos += 1;
+         vericode_pos_l = 0;
+         arraypos += 1;
        }
      }
 
