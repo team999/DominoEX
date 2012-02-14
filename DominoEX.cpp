@@ -43,6 +43,8 @@ int couldsendNibble; // this ==1 when ie a symble with a length of 1 nibble has 
 int arraypos=0;  //how far though the input string we are
 int vericode_pos_l=0; //Which of the 3 values making up the character are we at
 
+extern volatile unsigned long c4ms;  //kinda gross.  increments every 4ms while DDSTimers are on
+
 //Define the primary alphabet only.
 static unsigned char varicode[][3] = {
 	/* Primary alphabet */
@@ -344,12 +346,12 @@ bool dominoex::sendNibble(DDS& inDDS, char *pmessageString) //this should later 
         arraypos=0;
     }
     
-    Serial.print("inDDS.c4ms-tonestart");
-    Serial.println(inDDS.c4ms-tonestart,DEC);  
-    if(inDDS.c4ms-tonestart >= tone_ms) // if tone_ms (tone length in ms) has passed since tone start
+    //Serial.print("tone start");
+    //Serial.println(tonestart,DEC);  
+    if(c4ms-tonestart >= tone_ms) // if tone_ms (tone length in ms) has passed since tone start
     {
       //Serial.print(inDDS.c4ms-tonestart);
-      tonestart=inDDS.c4ms; // mark the time that a new tone started
+      tonestart=c4ms; // mark the time that a new tone started
        
       
        // Serial.print(arraypos);
@@ -376,7 +378,7 @@ bool dominoex::sendNibble(DDS& inDDS, char *pmessageString) //this should later 
          arraypos += 1;
          //We don't want to wait this time as we couldn't send this nibble as it doesn't exist
          //so force a chnage to the "end" of a tone.  This is untidy and should be fixed at somepoint.
-         tonestart=inDDS.c4ms+tone_ms;
+         tonestart=c4ms+tone_ms;
          
          
        }
