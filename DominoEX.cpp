@@ -106,7 +106,7 @@ void dominoex::init_radio_params(int mode, double txfreq_woffsetin)
 		symlen = 2048;
 		doublespaced = 2;
 		samplerate = 11025;
-		tone_ms = 186; //roughly 186 ms tones
+		tone_ms = 186; //roughly 186 ms tones. Calcuated by: bits per sec (baud)=samplerate/symlen, bit frequency (tone length in s)= 1/baud, tone_ms= bit frequency*1000
 		break;
 
 	case 11:
@@ -336,6 +336,8 @@ int dominoex::tx_process(int char_to_send, int vericode_tuple_pos)
 
 bool dominoex::sendNibble(DDS& inDDS, char *pmessageString) //this should later be moved into the main DominoEX Class
 {
+  inDDS.ReRand(); //dither the DDS
+  
   boolean string_transmitted=0;
   //check if end of message has been meet.  Basically are we in a position to run the comms again.
 

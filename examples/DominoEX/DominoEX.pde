@@ -1,5 +1,5 @@
 // ----------------------------------------------------------------------------
-// Team 9.99 DominoEX implementation 
+// Team 9.99 DominoEX implementation
 // dominoex.cpp  --  DominoEX modem
 //
 // Copyright (C) 2011-2012
@@ -27,11 +27,11 @@
 // You should have received a copy of the GNU General Public License
 // along with This program.  If not, see <http://www.gnu.org/licenses/>.
 
-//Note that this is a limited implementation of the DominoEX spec, it 
-//currently has no support for the secondary alphabet, as such it is good 
-//practise to continually transmit as this will help the receiver
-//maintain sync 
- 
+// Note that this is a limited implementation of the DominoEX spec, it
+// currently has no support for the secondary alphabet, as such it is good
+// practise to continually transmit as this will help the receiver
+// maintain sync
+
 // DDS components based on:
 // DDS Sine Generator mit ATMEGS 168
 // Timer2 generates the  31250 KHz Clock Interrupt
@@ -45,14 +45,14 @@
 #include <DominoEX.h>
 #include <DDS.h>
 
-dominoex myD16(8,16,1000);
+dominoex myD16(16,1000);
 DDS myDDS(1500);
 
 //some vars for dominoEX
 int stringpos=0; //position along the char array.
 int vericode_pos=0;
 
-int ledPin = 13;                 // LED pin 7
+int ledPin = 13;                
 int testPin = 7;
 int t2Pin = 6;
 byte bb;
@@ -76,10 +76,9 @@ void loop()
   //in microprocessor land so feel free to do stuff in between callling sendNibble
   //as long as sendNibble is still called fast enough.
   stringTxfinished=myD16.sendNibble(myDDS,"test! yes this is a test! ",&stringpos,&vericode_pos);
-  if (stringTxfinished==1){                
+  if (stringTxfinished==1){
 		//could do some stuff
     }
-  //could also do some stuff 
+  //could also do some stuff
  }
 //******************************************************************
-
